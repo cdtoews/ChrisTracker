@@ -573,7 +573,7 @@ void loop() {
         if (millis() - sleepTime > sleepDelay ) powerDown();
         break;
       case 5:
-        if (millis() - sleepTime > 20000 ){
+        if (millis() - sleepTime > 20000 ) {
           //let's quickly display the score
           display.clearDisplay();
           display.setTextSize(2);
@@ -599,10 +599,6 @@ void loop() {
         }
         break;
     }
-
-
-
-
   }
 }
 
@@ -684,7 +680,6 @@ void displayMenu0() {
 
 
 void displayMenu3() {
-
   if ((millis() - lastMS) > scrollWaitMS ) {
     //let's take care of scrolling here
     if (msg == "") {
@@ -719,23 +714,16 @@ void displayMenu3() {
       doneScrolling = true;
       msg = "";
     }
-
     display.setCursor((currentCharStep * -1), 10);
     display.setTextSize(2);
-
     display.println(thisLine);
     display.display();
     display.setTextSize(1);
-
-
     //reset lastMS
     lastMS = millis();
   }
 
 }
-
-
-
 
 
 void displayMenu4() {
@@ -772,9 +760,9 @@ void displayMenu77() {
     stringHour = String(tempHour);
   }
   display.setTextSize(3);
-  display.setCursor(-2, 30);
+  display.setCursor(-2, 27);
   display.print(stringHour.charAt(0));
-  display.setCursor(14, 32);
+  display.setCursor(14, 29);
   display.print(stringHour.charAt(1));
 
 
@@ -785,27 +773,26 @@ void displayMenu77() {
   } else {
     stringMinute = String(minute());
   }
-  display.setCursor(-2, 70);
+  display.setCursor(-2, 60);
   display.print(stringMinute.charAt(0));
-  display.setCursor(14, 72);
+  display.setCursor(14, 62);
   display.print(stringMinute.charAt(1));
-  //  display.setCursor(4, 77);
-  //  if (second() < 10) display.print("0");
-  //  display.println(second());
+  display.setTextSize(1);
+  display.setCursor(6, 87);
+  if (isAM()) {
+    display.print("AM");
+  } else {
+    display.print("PM");
+  }
+  display.setCursor(0, 99);
+  display.print(dow());
 
   display.setCursor(0, 111);
-  display.setTextSize(1);
-
   if (month() < 10) display.print("0");
   display.print(month());
-
   display.print("/");
   if (day() < 10) display.print("0");
   display.print(day());
-
-  //  display.print("/");
-  //  display.println(year());
-
   display.display();
 }
 
@@ -999,6 +986,7 @@ String getRandomQuote() {
   quoteIndex++;
   String thisMsg;
 
+  //this seems a horrible way to iterate through strings.
   switch (quoteIndex) {
     case 0:
       thisMsg = "It is better to have loved and lost than just to have lost.";
@@ -1292,46 +1280,34 @@ String getRandomQuote() {
   return "  " +  thisMsg;
 
 }
-//
-//String dayOfWeek() {
-//  int year = year();
-//  int month = month();
-//  int day = day();
-//  int months[] = {
-//    0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365
-//  };   // days until 1st of month
-//
-//  long days = year * 365;        // days until year
-//  for (int i = 4; i < year; i += 4) if (LEAP_YEAR(i) ) days++;     // adjust leap years, test only multiple of 4 of course
-//
-//  days += months[month - 1] + day;  // add the days of this year
-//  if ((month > 2) && LEAP_YEAR(year)) days++;  // adjust 1 if this year is a leap year, but only after febr
-//
-//  long dayNum =  days % 7;   // remove all multiples of 7
-//
-//  String result = "";
-//  switch (dayNum) {
-//    case 1:
-//      result = "Monday";
-//      break;
-//    case 2:
-//      result = "Tuesday";
-//      break;
-//    case 3:
-//      result = "Wednesday";
-//      break;
-//    case 4:
-//      result = "Thursday";
-//      break;
-//    case 5:
-//      result = "Friday";
-//      break;
-//    case 6:
-//      result = "Saturday";
-//      break;
-//    case 0:
-//      result = "Sunday";
-//      break;
-//  }
-//  return result;
-//}
+
+String dow() {
+  long t = now();
+  int dayNum = int( ((t / 86400) + 4) % 7);
+
+  String result = "";
+  switch (dayNum) {
+    case 1:
+      result = "MON";
+      break;
+    case 2:
+      result = "TUES";
+      break;
+    case 3:
+      result = "WED";
+      break;
+    case 4:
+      result = "THUR";
+      break;
+    case 5:
+      result = "FRI";
+      break;
+    case 6:
+      result = "SAT";
+      break;
+    case 0:
+      result = "SUN";
+      break;
+  }
+  return result;
+}
