@@ -25,12 +25,14 @@
 Adafruit_SSD1306 display(128, 32, &SPI, 28, 4, 29);
 
 boolean debug = false;
+String CTversion = "";
 
-#define sleepDelay 12000
+#define sleepDelay 10000 //12000
 #define BUTTON_PIN              30
 #define refreshRate 100
 
 int menu;
+int lastMenu;
 volatile bool buttonPressed = false;
 long startbutton;
 unsigned long sleepTime, displayRefreshTime;
@@ -162,7 +164,9 @@ void charge() {
 
 void buttonHandler() {
   if (!sleeping) buttonPressed = true;
-  else menu = 0;
+  //let's try just going back to the last option
+  //else menu = 0;
+  menu = lastMenu; //lastMenu remembers the last menu item user selected
   powerUp();
 }
 
@@ -365,16 +369,9 @@ int getBatteryLevel() {
 
 void setup() {
   totalScore = 0;
-  //get random seed by accelerometer
-  uint8_t res[6];
-  softbeginTransmission(0x1F);
-  softwrite(0x06);
-  softendTransmission();
-  softrequestFrom(0x1F , 6);
-  res[0] = softread();
-  res[1] = softread();
-  int x = (int16_t)((res[1] << 8) | res[0]);
-  randomSeed(x);
+  menu = 0;
+  lastMenu = 0;
+  randomSeed(analogRead(3));
   quoteIndex = random(0, 90);
 
   pinMode(BUTTON_PIN, INPUT);
@@ -469,12 +466,12 @@ void loop() {
       //          displayMenu1();
       //        }
       //        break;
-      //      case 2:
-      //        if (millis() - displayRefreshTime > refreshRate) {
-      //          displayRefreshTime = millis();
-      //          displayMenu2();
-      //        }
-      //        break;
+      case 2:
+        if (millis() - displayRefreshTime > refreshRate) {
+          displayRefreshTime = millis();
+          displayMenu2();
+        }
+        break;
       case 3:
         if (millis() - displayRefreshTime > refreshRate) {
           displayRefreshTime = millis();
@@ -513,20 +510,27 @@ void loop() {
     if (buttonPressed) {
       buttonPressed = false;
       switch (menu) {
+        case -1:
+          menu = 0;
+          lastMenu = 2;
+          break;
         case 0:
-          menu = 3;
+          menu = 2;
+          lastMenu = 2;
           break;
         //        case 1:
         //          menu = 2;
         //          break;
-        //        case 2:
-        //          menu = 3;
-        //          break;
+        case 2:
+          menu = 3;
+          lastMenu = 3;
+          break;
         case 3:
           //reset msg;
           msg = "";
           doneScrolling = true;
           menu = 4;
+          lastMenu = 4;
           break;
         case 4:
           startbutton = millis();
@@ -538,21 +542,23 @@ void loop() {
             while (1) {};
           } else {
             menu = 5;
+            lastMenu = 5;
           }
           break;
         case 5:
           totalScore = 0;
           menu = 0;
+          lastMenu = 0;
           break;
         case 77:
-          menu = 0;
+          menu = lastMenu;
           break;
         case 88:
-          menu = 0;
+          menu = lastMenu;
           break;
         case 99:
           digitalWrite(25, LOW);
-          menu = 0;
+          menu = lastMenu;
           break;
       }
     }
@@ -606,7 +612,7 @@ void displayMenu0() {
   display.setRotation(0);
   display.clearDisplay();
   display.setCursor(0, 0);
-  display.print(bleSymbol);
+  display.print(CTversion);
   display.println(" Time and Batt:");
   //let's get time string together
   String timeString = "";
@@ -649,41 +655,45 @@ void displayMenu0() {
 //  display.display();
 //}
 
-//void displayMenu2() {
-//  display.setRotation(0);
-//  uint8_t res[6];
-//  softbeginTransmission(0x1F);
-//  softwrite(0x06);
-//  softendTransmission();
-//  softrequestFrom(0x1F , 6);
-//  res[0] = softread();
-//  res[1] = softread();
-//  res[2] = softread();
-//  res[3] = softread();
-//  res[4] = softread();
-//  res[5] = softread();
-//  byte x = (int16_t)((res[1] << 8) | res[0]) / 128;
-//  byte y = (int16_t)((res[3] << 8) | res[2]) / 128;
-//  byte z = (int16_t)((res[5] << 8) | res[4]) / 128;
-//
-//  display.clearDisplay();
-//  display.setCursor(0, 0);
-//  display.println("Menue2 PushMSG:");
-//  display.println(msgText);
-//  display.print(x);
-//  display.print(",");
-//  display.print(y);
-//  display.print(",");
-//  display.println(z);
-//  display.display();
-//}
+//Display last push msg
+void displayMenu2() {
+  display.setRotation(0);
+  //  uint8_t res[6];
+  //  softbeginTransmission(0x1F);
+  //  softwrite(0x06);
+  //  softendTransmission();
+  //  softrequestFrom(0x1F , 6);
+  //  res[0] = softread();
+  //  res[1] = softread();
+  //  res[2] = softread();
+  //  res[3] = softread();
+  //  res[4] = softread();
+  //  res[5] = softread();
+  //  byte x = (int16_t)((res[1] << 8) | res[0]) / 128;
+  //  byte y = (int16_t)((res[3] << 8) | res[2]) / 128;
+  //  byte z = (int16_t)((res[5] << 8) | res[4]) / 128;
+
+  display.clearDisplay();
+  display.setCursor(0, 0);
+  display.print("MSG:");
+  display.setTextSize(2);
+  display.println(msgText);
+  //  display.print(x);
+  //  display.print(",");
+  //  display.print(y);
+  //  display.print(",");
+  //  display.println(z);
+  display.setTextSize(1);
+  display.display();
+}
 
 
+//Displaying Quotes
 void displayMenu3() {
   if ((millis() - lastMS) > scrollWaitMS ) {
     //let's take care of scrolling here
     if (msg == "") {
-      //we are just starting, so set the msg"
+      //we are just starting, so get the msg"
       doneScrolling = false;
       msg = getRandomQuote();
     }
@@ -726,6 +736,7 @@ void displayMenu3() {
 }
 
 
+//Bootloader
 void displayMenu4() {
   display.setRotation(0);
   display.clearDisplay();
@@ -818,8 +829,9 @@ void displayMenu99() {
   display.display();
 }
 
-
+//The Game
 void displayMenu5() {
+  display.setRotation(0);
   uint32_t t;
   while (((t = micros()) - prevTime) < (1000000L / MAX_FPS));
   prevTime = t;
@@ -975,6 +987,7 @@ void displayMenu5() {
 
   }
   totalScore += thisScore;
+
   display.setCursor(0, 0);
   display.print(totalScore);
   display.display();
