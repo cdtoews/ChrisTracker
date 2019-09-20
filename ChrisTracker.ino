@@ -14,7 +14,6 @@
 #include "count_steps.c"
 #include "i2csoft.h"
 
-
 #define wdt_reset() NRF_WDT->RR[0] = WDT_RR_RR_Reload
 #define wdt_enable(timeout) \
   NRF_WDT->CONFIG = NRF_WDT->CONFIG = (WDT_CONFIG_HALT_Pause << WDT_CONFIG_HALT_Pos) | ( WDT_CONFIG_SLEEP_Pause << WDT_CONFIG_SLEEP_Pos); \
@@ -27,7 +26,8 @@ Adafruit_SSD1306 display(128, 32, &SPI, 28, 4, 29);
 boolean debug = false;
 String CTversion = "";
 
-#define sleepDelay 10000 //12000
+#define sleepDelay 10000 
+#define clockDelay 5000
 #define BUTTON_PIN              30
 #define refreshRate 100
 
@@ -49,11 +49,11 @@ boolean vibrationMode;
 
 String msg = "";
 boolean doneScrolling = true;
-int scrollWaitMS = 1;
-int stepsPerChar = 10;
+int scrollWaitMS = 50;
+int stepsPerChar = 11;
 int currentCharStep = 0;
 long lastMS = millis();
-int charScrollStep = 5;
+int charScrollStep = 7;
 int quoteIndex;
 int quoteSize = 95;
 
@@ -69,7 +69,7 @@ BLEService                      batteryLevelService1     = BLEService("190B");
 BLECharacteristic   TXchar1        = BLECharacteristic("0004", BLENotify, 20);
 BLECharacteristic   RXchar1        = BLECharacteristic("0003", BLEWriteWithoutResponse, 20);
 
-#define N_GRAINS     1 // Number of grains of sand
+#define N_GRAINS     3 // Number of grains of sand
 #define WIDTH        127 // Display width in pixels
 #define HEIGHT       32 // Display height in pixels
 #define MAX_FPS      150 // Maximum redraw rate, frames/second
@@ -473,7 +473,7 @@ void loop() {
         }
         break;
       case 3:
-        if (millis() - displayRefreshTime > refreshRate) {
+        if (millis() - displayRefreshTime > scrollWaitMS) {
           displayRefreshTime = millis();
           doneScrolling = false;
           displayMenu3();
@@ -487,6 +487,9 @@ void loop() {
         break;
       case 5:
         displayMenu5();
+        break;
+      case 7:
+        displayMenu77();
         break;
       case 77:
         if (millis() - displayRefreshTime > refreshRate) {
@@ -547,6 +550,10 @@ void loop() {
           break;
         case 5:
           totalScore = 0;
+          menu = 7;
+          lastMenu = 7;
+          break;
+        case 7:
           menu = 0;
           lastMenu = 0;
           break;
@@ -592,8 +599,11 @@ void loop() {
           powerDown();
         }
         break;
+      case 7:
+        if (millis() - sleepTime > clockDelay ) powerDown();
+        break;
       case 77:
-        if (millis() - sleepTime > 3000 ) powerDown();
+        if (millis() - sleepTime > clockDelay ) powerDown();
         break;
       case 88:
         if (millis() - sleepTime > 3000 ) powerDown();
@@ -608,6 +618,7 @@ void loop() {
   }
 }
 
+//display time & Battery
 void displayMenu0() {
   display.setRotation(0);
   display.clearDisplay();
@@ -703,15 +714,19 @@ void displayMenu3() {
     display.setCursor(0, 0);
     display.print("Message of the Moment");
     //let's determine if we will clip a character, or move the cursor;
+
+    //increase the step
+    currentCharStep += charScrollStep;
+    
     if (currentCharStep >= stepsPerChar) {
-      //clip msg and reset
+      //clip msg and decrease currentCharStep
       msg = msg.substring(1);
-      currentCharStep = 0;
-    } else {
-      currentCharStep += charScrollStep;
+      currentCharStep -= stepsPerChar;
     }
     String thisLine;
     int width = 10;
+
+    
     if (msg.length() < width) {
       width = msg.length();
       thisLine = msg;
@@ -747,7 +762,7 @@ void displayMenu4() {
   display.display();
 }
 
-//shows the time when you shake the tracker
+//shows the time, with shake, or menu
 void displayMenu77() {
   display.setRotation(3);
   display.clearDisplay();
@@ -982,9 +997,6 @@ void displayMenu5() {
 
     }
 
-
-
-
   }
   totalScore += thisScore;
 
@@ -992,7 +1004,6 @@ void displayMenu5() {
   display.print(totalScore);
   display.display();
 }
-
 
 String getRandomQuote() {
 
