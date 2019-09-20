@@ -48,6 +48,7 @@ boolean gotoBootloader = false;
 boolean vibrationMode;
 
 String msg = "";
+String msgPrefix = "    ";
 boolean doneScrolling = true;
 int scrollWaitMS = 50;
 int stepsPerChar = 11;
@@ -1301,7 +1302,7 @@ String getRandomQuote() {
   }
 
 
-  return "  " +  thisMsg;
+  return msgPrefix +  thisMsg;
 
 }
 
