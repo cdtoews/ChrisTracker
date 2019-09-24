@@ -24,7 +24,7 @@
 Adafruit_SSD1306 display(128, 32, &SPI, 28, 4, 29);
 
 boolean debug = false;
-String CTversion = "";
+const String CTversion = "";
 
 #define sleepDelay 10000 
 #define clockDelay 5000
@@ -48,15 +48,15 @@ boolean gotoBootloader = false;
 boolean vibrationMode;
 
 String msg = "";
-String msgPrefix = "    ";
+const String msgPrefix = "    ";
 boolean doneScrolling = true;
-int scrollWaitMS = 50;
-int stepsPerChar = 11;
+const int scrollWaitMS = 50;
+const int stepsPerChar = 11;
 int currentCharStep = 0;
 long lastMS = millis();
 int charScrollStep = 7;
 int quoteIndex;
-int quoteSize = 95;
+const int quoteSize = 95;
 
 String bleSymbol = " ";
 int contrast;
