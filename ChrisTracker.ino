@@ -24,15 +24,15 @@
 Adafruit_SSD1306 display(128, 32, &SPI, 28, 4, 29);
 
 boolean debug = false;
-const String CTversion = "";
+const char CTversion[2] = "1";
 
-#define sleepDelay 10000 
+#define sleepDelay 10000
 #define clockDelay 5000
 #define BUTTON_PIN              30
 #define refreshRate 100
 
-int menu;
-int lastMenu;
+int menu = 0;
+int lastMenu = 0;
 volatile bool buttonPressed = false;
 long startbutton;
 unsigned long sleepTime, displayRefreshTime;
@@ -47,12 +47,13 @@ String msgText;
 boolean gotoBootloader = false;
 boolean vibrationMode;
 
-String msg = "";
-const String msgPrefix = "    ";
+char msg[154] = "";
+const char msgPrefix[4] = "    ";
 boolean doneScrolling = true;
 const int scrollWaitMS = 50;
 const int stepsPerChar = 11;
 int currentCharStep = 0;
+int currentCharInt = 0;
 long lastMS = millis();
 int charScrollStep = 7;
 int quoteIndex;
@@ -74,7 +75,7 @@ BLECharacteristic   RXchar1        = BLECharacteristic("0003", BLEWriteWithoutRe
 #define WIDTH        127 // Display width in pixels
 #define HEIGHT       32 // Display height in pixels
 #define MAX_FPS      150 // Maximum redraw rate, frames/second
-int totalScore;
+int totalScore = 0;
 
 
 // The 'sand' grains exist in an integer coordinate space that's 256X
@@ -369,9 +370,6 @@ int getBatteryLevel() {
 }
 
 void setup() {
-  totalScore = 0;
-  menu = 0;
-  lastMenu = 0;
   randomSeed(analogRead(3));
   quoteIndex = random(0, 90);
 
@@ -516,7 +514,7 @@ void loop() {
       switch (menu) {
         case -1:
           menu = 0;
-          lastMenu = 2;
+          lastMenu = 0;
           break;
         case 0:
           menu = 2;
@@ -699,12 +697,22 @@ void displayMenu2() {
   display.display();
 }
 
+char getSubChar(char &original[], int startingPoint, int length) {
+  char result[length];
+  for (int i = 0; i < length; i++) {
+    if (strlen(original) < startingPoint + i) {
+      break;
+    }
+    result[i] = original[startingPoint + i];
+  }
+  return result;
+}
 
 //Displaying Quotes
 void displayMenu3() {
   if ((millis() - lastMS) > scrollWaitMS ) {
     //let's take care of scrolling here
-    if (msg == "") {
+    if (strcmp ( msg, "" ) == 0 ) {
       //we are just starting, so get the msg"
       doneScrolling = false;
       msg = getRandomQuote();
@@ -718,25 +726,24 @@ void displayMenu3() {
 
     //increase the step
     currentCharStep += charScrollStep;
-    
+
     if (currentCharStep >= stepsPerChar) {
       //clip msg and decrease currentCharStep
-      msg = msg.substring(1);
+      currentCharInt++;
       currentCharStep -= stepsPerChar;
     }
     String thisLine;
     int width = 10;
 
-    
-    if (msg.length() < width) {
-      width = msg.length();
-      thisLine = msg;
+
+    if (strlen(msg) < width) {
+      width = strlen(msg)
+              thisLine = msg;
 
     } else {
-      thisLine = msg.substring(0, width);
-
+      thisLine = getSubChar(msg,currentCharInt,width);
     }
-    if (msg.length() < 2) {
+    if (strlen(msg) < 2) {
       doneScrolling = true;
       msg = "";
     }
@@ -1006,311 +1013,313 @@ void displayMenu5() {
   display.display();
 }
 
-String getRandomQuote() {
+char getRandomQuote() {
 
   quoteIndex++;
-  String thisMsg;
+  char thisMsg[154];
+  strcpy(thisMsg, msgPrefix);
 
-  //this seems a horrible way to iterate through strings.
   switch (quoteIndex) {
     case 0:
-      thisMsg = "It is better to have loved and lost than just to have lost.";
+      strcat(thisMsg, "It is better to have loved and lost than just to have lost.");
       break;
     case 1:
-      thisMsg = "It is bad luck to be superstitious.";
+      strcat(thisMsg, "It is bad luck to be superstitious.");
       break;
     case 2:
-      thisMsg = "If it jams, force it. If it breaks, it needed replacement anyway.";
+      strcat(thisMsg, "If it jams, force it. If it breaks, it needed replacement anyway.");
       break;
     case 3:
-      thisMsg = "Always remember that you are unique. Just like everyone else.";
+      strcat(thisMsg, "Always remember that you are unique. Just like everyone else.");
       break;
     case 4:
-      thisMsg = "A bachelor is a guy who is footloose and fiancee free.";
+      strcat(thisMsg, "A bachelor is a guy who is footloose and fiancee free.");
       break;
     case 5:
-      thisMsg = "If Yoda a great Jedi master he is, why not a good sentence construct can he?";
+      strcat(thisMsg, "If Yoda a great Jedi master he is, why not a good sentence construct can he?");
       break;
     case 6:
-      thisMsg = "People will remember you better if you always wear the same outfit.";
+      strcat(thisMsg, "People will remember you better if you always wear the same outfit.");
       break;
     case 7:
-      thisMsg = "All things are possible except for skiing through a revolving door.";
+      strcat(thisMsg, "All things are possible except for skiing through a revolving door.");
       break;
     case 8:
-      thisMsg = "Only two of my personalities are schizophrenic, but one of them is paranoid and the other one is out to get him.";
+      strcat(thisMsg, "Only two of my personalities are schizophrenic, but one of them is paranoid and the other one is out to get him.");
       break;
     case 9:
-      thisMsg = "If you love a thing of beauty, set it free. If it doesn't come back to you, hunt it down and kill it.";
+      strcat(thisMsg, "If you love a thing of beauty, set it free. If it doesn't come back to you, hunt it down and kill it.");
       break;
     case 10:
-      thisMsg = "I may be schizophrenic, but at least I'll always have each other.";
+      strcat(thisMsg, "I may be schizophrenic, but at least I'll always have each other.");
       break;
     case 11:
-      thisMsg = "Give your child mental blocks for Christmas.";
+      strcat(thisMsg, "Give your child mental blocks for Christmas.");
       break;
     case 12:
-      thisMsg = "I stayed up all night playing poker with tarot cards. I got a full house and four people died.";
+      strcat(thisMsg, "I stayed up all night playing poker with tarot cards. I got a full house and four people died.");
       break;
     case 13:
-      thisMsg = "It is impossible to make anything foolproof because fools are so ingenious.";
+      strcat(thisMsg, "It is impossible to make anything foolproof because fools are so ingenious.");
       break;
     case 14:
-      thisMsg = "Those who can't write, write manuals.";
+      strcat(thisMsg, "Those who can't write, write manuals.");
       break;
     case 15:
-      thisMsg = "The brain is a wonderful organ:  it starts working the moment you get up in the morning, and does not stop until you get to school.";
+      strcat(thisMsg, "The brain is a wonderful organ:  it starts working the moment you get up in the morning, and does not stop until you get to school.");
       break;
     case 16:
-      thisMsg = "You'd be paranoid too if everybody hated you.";
+      strcat(thisMsg, "You'd be paranoid too if everybody hated you.");
       break;
     case 17:
-      thisMsg = "All generalities are false.";
+      strcat(thisMsg, "All generalities are false.");
       break;
     case 18:
-      thisMsg = "I'd give my right arm to be ambidextrous.";
+      strcat(thisMsg, "I'd give my right arm to be ambidextrous.");
       break;
     case 19:
-      thisMsg = "Duct tape is like the Force.  It has a light side, and a dark side, and it holds the universe together.";
+      strcat(thisMsg, "Duct tape is like the Force.  It has a light side, and a dark side, and it holds the universe together.");
       break;
     case 20:
-      thisMsg = "I used to think I was indecisive, but now I'm not so sure.";
+      strcat(thisMsg, "I used to think I was indecisive, but now I'm not so sure.");
       break;
     case 21:
-      thisMsg = "Cole's Law:  Thinly sliced cabbage.";
+      strcat(thisMsg, "Cole's Law:  Thinly sliced cabbage.");
       break;
     case 22:
-      thisMsg = "Things are more like they used to be than they are now.";
+      strcat(thisMsg, "Things are more like they used to be than they are now.");
       break;
     case 23:
-      thisMsg = "There is so much sand in Northern Africa that if it were spread out it would completely cover the Sahara Desert.";
+      strcat(thisMsg, "There is so much sand in Northern Africa that if it were spread out it would completely cover the Sahara Desert.");
       break;
     case 24:
-      thisMsg = "It has been said that we only use 15% of our brain.  I wonder what we do with the other 75%?";
+      strcat(thisMsg, "It has been said that we only use 15% of our brain.  I wonder what we do with the other 75%?");
       break;
     case 25:
-      thisMsg = "If you want your spouse to listen and pay strict attention to every word you say, talk in your sleep.";
+      strcat(thisMsg, "If you want your spouse to listen and pay strict attention to every word you say, talk in your sleep.");
       break;
     case 26:
-      thisMsg = "If you have a difficult task, give it to someone lazy ... that person will find an easier way to do it.";
+      strcat(thisMsg, "If you have a difficult task, give it to someone lazy ... that person will find an easier way to do it.");
       break;
     case 27:
-      thisMsg = "You know it's going to be a bad day when your car horn goes off accidentally and remains stuck as you follow a group of Hell's Angels on the freeway.";
+      strcat(thisMsg, "You know it's going to be a bad day when your car horn goes off accidentally and remains stuck as you follow a group of Hell's Angels on the freeway.");
       break;
     case 28:
-      thisMsg = "The way to make a small fortune in the commodities market is to start with a large fortune.";
+      strcat(thisMsg, "The way to make a small fortune in the commodities market is to start with a large fortune.");
       break;
     case 29:
-      thisMsg = "A closed mouth gathers no feet.";
+      strcat(thisMsg, "A closed mouth gathers no feet.");
       break;
     case 30:
-      thisMsg = "A journey of a thousand miles begins with a cash advance.";
+      strcat(thisMsg, "A journey of a thousand miles begins with a cash advance.");
       break;
     case 31:
-      thisMsg = "A king's castle is his home.";
+      strcat(thisMsg, "A king's castle is his home.");
       break;
     case 32:
-      thisMsg = "A penny saved is ridiculous.";
+      strcat(thisMsg, "A penny saved is ridiculous.");
       break;
     case 33:
-      thisMsg = "All that glitters has a high refractive index.";
+      strcat(thisMsg, "All that glitters has a high refractive index.");
       break;
     case 34:
-      thisMsg = "Ambition a poor excuse for not having enough sense to be lazy.";
+      strcat(thisMsg, "Ambition a poor excuse for not having enough sense to be lazy.");
       break;
     case 35:
-      thisMsg = "Anarchy is better that no government at all.";
+      strcat(thisMsg, "Anarchy is better that no government at all.");
       break;
     case 36:
-      thisMsg = "Any small object when dropped will hide under a larger object.";
+      strcat(thisMsg, "Any small object when dropped will hide under a larger object.");
       break;
     case 37:
-      thisMsg = "Automobile - A mechanical device that runs up hills and down people.";
+      strcat(thisMsg, "Automobile - A mechanical device that runs up hills and down people.");
       break;
     case 38:
-      thisMsg = "Be moderate where pleasure is concerned, avoid fatigue.";
+      strcat(thisMsg, "Be moderate where pleasure is concerned, avoid fatigue.");
       break;
     case 39:
-      thisMsg = "Brain -- the apparatus with which we think that we think.";
+      strcat(thisMsg, "Brain -- the apparatus with which we think that we think.");
       break;
     case 40:
-      thisMsg = "BATCH - A group, kinda like a herd.";
+      strcat(thisMsg, "BATCH - A group, kinda like a herd.");
       break;
     case 41:
-      thisMsg = "omputer modelers simulate it first.";
+      strcat(thisMsg, "omputer modelers simulate it first.");
       break;
     case 42:
-      thisMsg = "Computer programmers don't byte, they nybble a bit.";
+      strcat(thisMsg, "Computer programmers don't byte, they nybble a bit.");
       break;
     case 43:
-      thisMsg = "Computer programmers know how to use their hardware.";
+      strcat(thisMsg, "Computer programmers know how to use their hardware.");
       break;
     case 44:
-      thisMsg = "Computers are not intelligent.  They only think they are.";
+      strcat(thisMsg, "Computers are not intelligent.  They only think they are.");
       break;
     case 45:
-      thisMsg = "Courage is your greatest present need.";
+      strcat(thisMsg, "Courage is your greatest present need.");
       break;
     case 46:
-      thisMsg = "Death is life's way of telling you you've been fired.";
+      strcat(thisMsg, "Death is life's way of telling you you've been fired.");
       break;
     case 47:
-      thisMsg = "Death is Nature's way of saying 'slow down'.";
+      strcat(thisMsg, "Death is Nature's way of saying 'slow down'.");
       break;
     case 48:
-      thisMsg = "Do something unusual today.  Accomplish work on the computer.";
+      strcat(thisMsg, "Do something unusual today.  Accomplish work on the computer.");
       break;
     case 49:
-      thisMsg = "Don't force it, get a larger hammer.";
+      strcat(thisMsg, "Don't force it, get a larger hammer.");
       break;
     case 50:
-      thisMsg = "Don't hate yourself in the morning -- sleep till noon.";
+      strcat(thisMsg, "Don't hate yourself in the morning -- sleep till noon.");
       break;
     case 51:
-      thisMsg = "Drive defensively -- buy a tank.";
+      strcat(thisMsg, "Drive defensively -- buy a tank.");
       break;
     case 52:
-      thisMsg = "Earn cash in your spare time -- blackmail friends.";
+      strcat(thisMsg, "Earn cash in your spare time -- blackmail friends.");
       break;
     case 53:
-      thisMsg = "Entropy isn't what it used to be.";
+      strcat(thisMsg, "Entropy isn't what it used to be.");
       break;
     case 54:
-      thisMsg = "Fairy tales: horror stories for children to get them use to reality.";
+      strcat(thisMsg, "Fairy tales: horror stories for children to get them use to reality.");
       break;
     case 55:
-      thisMsg = "Familiarity breeds children.";
+      strcat(thisMsg, "Familiarity breeds children.");
       break;
     case 56:
-      thisMsg = "God didn't create the world in 7 days.  He pulled an all-nighter on the 6th.";
+      strcat(thisMsg, "God didn't create the world in 7 days.  He pulled an all-nighter on the 6th.");
       break;
     case 57:
-      thisMsg = "Going the speed of light is bad for your age.";
+      strcat(thisMsg, "Going the speed of light is bad for your age.");
       break;
     case 58:
-      thisMsg = "He who hesitates is sometimes saved.";
+      strcat(thisMsg, "He who hesitates is sometimes saved.");
       break;
     case 59:
-      thisMsg = "Health is merely the slowest possible rate at which one can die.";
+      strcat(thisMsg, "Health is merely the slowest possible rate at which one can die.");
       break;
     case 60:
-      thisMsg = "Help support helpless victims of computer error.";
+      strcat(thisMsg, "Help support helpless victims of computer error.");
       break;
     case 61:
-      thisMsg = "Herblock's Law: if it is good, they will stop making it.";
+      strcat(thisMsg, "Herblock's Law: if it is good, they will stop making it.");
       break;
     case 62:
-      thisMsg = "History does not repeat itself, -- historians merely repeat each other.";
+      strcat(thisMsg, "History does not repeat itself, -- historians merely repeat each other.");
       break;
     case 63:
-      thisMsg = "If you don't change your direction, you may end up where you were headed.";
+      strcat(thisMsg, "If you don't change your direction, you may end up where you were headed.");
       break;
     case 64:
-      thisMsg = "If you're not part of the solution, be part of the problem!";
+      strcat(thisMsg, "If you're not part of the solution, be part of the problem!");
       break;
     case 65:
-      thisMsg = "In the field of observation, chance favors only the prepared minds.";
+      strcat(thisMsg, "In the field of observation, chance favors only the prepared minds.");
       break;
     case 66:
-      thisMsg = "It is a miracle that curiosity survives formal education.  Albert Einstein";
+      strcat(thisMsg, "It is a miracle that curiosity survives formal education.  Albert Einstein");
       break;
     case 67:
-      thisMsg = "It works better if you plug it in.";
+      strcat(thisMsg, "It works better if you plug it in.");
       break;
     case 68:
-      thisMsg = "It's not hard to meet expenses, they're everywhere.";
+      strcat(thisMsg, "It's not hard to meet expenses, they're everywhere.");
       break;
     case 69:
-      thisMsg = "Jury -- Twelve people who determine which client has the better lawyer.";
+      strcat(thisMsg, "Jury -- Twelve people who determine which client has the better lawyer.");
       break;
     case 70:
-      thisMsg = "KODACLONE - duplicating film.";
+      strcat(thisMsg, "KODACLONE - duplicating film.");
       break;
     case 71:
-      thisMsg = "Let not the sands of time get in your lunch.";
+      strcat(thisMsg, "Let not the sands of time get in your lunch.");
       break;
     case 72:
-      thisMsg = "Life is what happens to you while you are planning to do something else.";
+      strcat(thisMsg, "Life is what happens to you while you are planning to do something else.");
       break;
     case 73:
-      thisMsg = "Lynch's Law: When the going gets tough, everyone leaves.";
+      strcat(thisMsg, "Lynch's Law: When the going gets tough, everyone leaves.");
       break;
     case 74:
-      thisMsg = "Mediocrity thrives on standardization.";
+      strcat(thisMsg, "Mediocrity thrives on standardization.");
       break;
     case 75:
-      thisMsg = "MOP AND GLOW - Floor wax used by Three Mile Island cleanup team.";
+      strcat(thisMsg, "MOP AND GLOW - Floor wax used by Three Mile Island cleanup team.");
       break;
     case 76:
-      thisMsg = "Never lick a gift horse in the mouth.";
+      strcat(thisMsg, "Never lick a gift horse in the mouth.");
       break;
     case 77:
-      thisMsg = "Old MacDonald had an agricultural real estate tax abatement.";
+      strcat(thisMsg, "Old MacDonald had an agricultural real estate tax abatement.");
       break;
     case 78:
-      thisMsg = "Quoting one is plagiarism.  Quoting many is research.";
+      strcat(thisMsg, "Quoting one is plagiarism.  Quoting many is research.");
       break;
     case 79:
-      thisMsg = "Reality's the only obstacle to happiness.";
+      strcat(thisMsg, "Reality's the only obstacle to happiness.");
       break;
     case 80:
-      thisMsg = "Screw up your life, you've screwed everything else up.";
+      strcat(thisMsg, "Screw up your life, you've screwed everything else up.");
       break;
     case 81:
-      thisMsg = "Silver's law:   If Murphy's law can go wrong it will.";
+      strcat(thisMsg, "Silver's law:   If Murphy's law can go wrong it will.");
       break;
     case 82:
-      thisMsg = "Some grow with responsibility, others just swell.";
+      strcat(thisMsg, "Some grow with responsibility, others just swell.");
       break;
     case 83:
-      thisMsg = "The attention span of a computer is as long as its electrical cord.";
+      strcat(thisMsg, "The attention span of a computer is as long as its electrical cord.");
       break;
     case 84:
-      thisMsg = "The only difference between a rut and a grave is the depth.";
+      strcat(thisMsg, "The only difference between a rut and a grave is the depth.");
       break;
     case 85:
-      thisMsg = "The road to to success is always under construction.";
+      strcat(thisMsg, "The road to to success is always under construction.");
       break;
     case 86:
-      thisMsg = "Those who can't write, write help files.";
+      strcat(thisMsg, "Those who can't write, write help files.");
       break;
     case 87:
-      thisMsg = "To be, or not to be, those are the parameters.";
+      strcat(thisMsg, "To be, or not to be, those are the parameters.");
       break;
     case 88:
-      thisMsg = "To err is human, to really foul things up requires a computer.";
+      strcat(thisMsg, "To err is human, to really foul things up requires a computer.");
       break;
     case 89:
-      thisMsg = "Today is the last day of your life so far.";
+      strcat(thisMsg, "Today is the last day of your life so far.");
       break;
     case 90:
-      thisMsg = "TRAPEZOID - A device for catching zoids.";
+      strcat(thisMsg, "TRAPEZOID - A device for catching zoids.");
       break;
     case 91:
-      thisMsg = "Wasting time is an important part of life.";
+      strcat(thisMsg, "Wasting time is an important part of life.");
       break;
     case 92:
-      thisMsg = "When all else fails, read the instructions.";
+      strcat(thisMsg, "When all else fails, read the instructions.");
       break;
     case 93:
-      thisMsg = "When in doubt, don't bother.";
+      strcat(thisMsg, "When in doubt, don't bother.");
       break;
     case 94:
-      thisMsg  = "When in doubt, ignore it.";
+      strcat(thisMsg, "When in doubt, ignore it.");
       quoteIndex = -1;
       break;
   }
 
 
-  return msgPrefix +  thisMsg;
+
+
+  return thisMsg;
 
 }
 
-String dow() {
+char dow() {
   long t = now();
   int dayNum = int( ((t / 86400) + 4) % 7);
 
-  String result = "";
+  char result[3];
   switch (dayNum) {
     case 1:
       result = "MON";
