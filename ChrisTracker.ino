@@ -24,7 +24,7 @@
 Adafruit_SSD1306 display(128, 32, &SPI, 28, 4, 29);
 
 boolean debug = false;
-const String CTversion = "";
+#define  CTversion "0.4"
 
 #define sleepDelay 10000
 #define clockDelay 5000
@@ -63,6 +63,14 @@ const int quoteSize = 95;
 
 String bleSymbol = " ";
 int contrast;
+
+const char msgTextToIgnore[2][30] =
+{
+  "Voice is doing work",
+  "1234567890xxx"
+};
+
+
 
 BLEPeripheral                   blePeripheral           = BLEPeripheral();
 BLEService                      batteryLevelService     = BLEService("190A");
@@ -234,7 +242,7 @@ void filterCmd(String Command) {
     sendBLEcmd("AT+USER:" + Command.substring(8));
   }  else if (Command.substring(0, 7) == "AT+REC=") {
     sendBLEcmd("AT+REC:" + Command.substring(7));
-  } else if (Command.substring(0, 8) == "AT+PUSH=") {
+  } else if (Command.substring(0, 8) == "AT+PUSH=" && !ignoreMsg(Command)) {
     sendBLEcmd("AT+PUSH:OK");
     menu = 99;
     powerUp();
@@ -330,6 +338,20 @@ void sendBLEcmd(String Command) {
     TXchar1.setValue(TempSendCmd);
     Command = Command.substring(20);
   }
+}
+
+boolean ignoreMsg(String msgText) {
+  char msgArray[msgText.length()];
+  msgText.toCharArray(msgArray, msgText.length());
+  //msgTextToIgnore
+  int msgCount = sizeof(msgTextToIgnore) / sizeof(msgTextToIgnore[0]);
+  for (int i = 0; i < msgCount; i++) {
+    //char eachIgnoreable = msgTextToIgnore[i];
+    if (strstr (msgArray, msgTextToIgnore[i])) {
+      return true;
+    }
+  }
+  return false;
 }
 
 String GetDateTimeString() {
@@ -624,7 +646,6 @@ void displayMenu0() {
   display.setRotation(0);
   display.clearDisplay();
   display.setCursor(0, 0);
-  display.print(CTversion);
   display.println(" Time and Batt:");
   //let's get time string together
   String timeString = "";
@@ -756,7 +777,7 @@ void displayMenu3() {
     } else {
       thisLine = getSubChar(msg, currentCharInt, width);
     }
-    if (msg[currentCharInt] == 0) { 
+    if (msg[currentCharInt] == 0) {
       doneScrolling = true;
       msg[0] = 0;
     }
@@ -778,7 +799,8 @@ void displayMenu4() {
   display.clearDisplay();
   display.setCursor(0, 0);
   display.println("Howdy From Arduino");
-  display.println("  :)");
+  display.print("v: ");
+  display.println(CTversion);
   display.println("Hold for Bootloader");
   display.display();
 }
