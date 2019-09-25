@@ -24,7 +24,7 @@
 Adafruit_SSD1306 display(128, 32, &SPI, 28, 4, 29);
 
 boolean debug = false;
-const String CTversion = "9";
+const String CTversion = "";
 
 #define sleepDelay 10000
 #define clockDelay 5000
@@ -835,7 +835,7 @@ void displayMenu77() {
   display.print(dow());
 
   display.setCursor(0, 111);
-  if (month() < 10) display.print("0");
+  if (month() < 10) display.print(" ");
   display.print(month());
   display.print("/");
   if (day() < 10) display.print("0");
