@@ -24,12 +24,13 @@
 Adafruit_SSD1306 display(128, 32, &SPI, 28, 4, 29);
 
 boolean debug = false;
-#define  CTversion "0.4"
+#define  CTversion "0.5 dev0"
 
 #define sleepDelay 10000
 #define clockDelay 5000
 #define BUTTON_PIN              30
 #define refreshRate 100
+#define msgLenth 200
 
 int menu = 0;
 int lastMenu = 0;
@@ -47,7 +48,7 @@ String msgText;
 boolean gotoBootloader = false;
 boolean vibrationMode;
 
-char msg[200];
+char msg[msgLenth];
 char subChar[50];
 char currentDOW[6];
 const char msgPrefix[5] = "    ";
@@ -67,9 +68,149 @@ int contrast;
 const char msgTextToIgnore[2][30] =
 {
   "Voice is doing work",
-  "1234567890xxx"
+  "1234567890x"
 };
 
+const char msgArray[][msgLenth] =
+{
+  "I did not attend his funeral, but I sent a nice letter saying I approved of it. - Mark Twain",
+  "A lie gets halfway around the world before the truth has a chance to get its pants on. - Winston Churchill",
+  "When life gives you lemons, squirt someone in the eye. - Cathy Guisewite",
+  "If I were two-faced, would I be wearing this one? - Abraham Lincoln",
+  "The best thing about the future is that it comes one day at a time.- Abraham Lincoln",
+  "The only mystery in life is why the kamikaze pilots wore helmets.- Al McGuire",
+  "Light travels faster than sound. This is why some people appear bright until you hear them speak.- Alan Dundes",
+  "Nobody realizes that some people expend tremendous energy merely to be normal.- Albert Camus",
+  "Reality continues to ruin my life. - Bill Watterson",
+  "I'm addicted to placebos. - Steven Wright",
+  "I'd like to live like a poor man - only with lots of money. - Pablo Picasso",
+  "Men marry women with the hope they will never change. Women marry men with the hope they will change. Invariably they are both disappointed.- Albert Einstein",
+  "The difference between stupidity and genius is that genius has its limits. - Albert Einstein",
+  "All the things I really like to do are either immoral, illegal or fattening.- Alexander Woollcott",
+  "Going to church doesn't make you a Christian any more than standing in a garage makes you a car. BILLY SUNDAY",
+  "Never go to bed mad. Stay up and fight. - Phyllis Diller",
+  "Never miss a good chance to shut up. - Will Rogers",
+  "The only thing that interferes with my learning is my education. - Albert Einstein",
+  "I'm not as think as you drunk I am. - Anonymous",
+  "I am nobody. Nobody is perfect. I am perfect.",
+  "They say marriages are made in Heaven. But so is thunder and lightning. - Clint Eastwood",
+  "Change is not a four-letter word… but often your reaction to it is! - Jeffrey Gitomer",
+  "I always wanted to be somebody, but now I realize I should have been more specific. - Lily Tomlin",
+  "Sane is boring. - R.A. Salvatore",
+  "Stressed is just desserts spelled backwards.",
+  "Fart when people hug you. You’ll make them feel strong.",
+  "It is a truth universally acknowledged that your urge to pee intensifies as you are unlocking the door.",
+  "Don't worry if plan A fails, there are 25 more letters in the alphabet.",
+  "A bank is a place that will lend you money, if you can prove that you don’t need it.",
+  "Doesn't expecting the unexpected make the unexpected expected?",
+  "I'm jealous of my parents, I'll never have a kid as cool as them.",
+  "When life gives you melons, you might be dyslexic.",
+  "5/4 of people admit that they’re bad with fractions.",
+  "Why do you never see elephants hiding in trees? Because they're so good at it.",
+  "Did you hear about the restaurant on the moon? Great food, no atmosphere.",
+  "Two goldfish are in a tank. One says to the other, 'do you know how to drive this thing?'",
+  "There are people who are a living proof that total brain failure does not always lead to physical death.",
+  "If a book about failures doesn't sell, is it a success? - Jerry Seinfeld",
+  "You tried your best and you failed miserably. The lesson is, never try. - Homer Simpson",
+  "The brain is a wonderful organ; it starts working the moment you get up in the morning, and does not stop until you get into the office. - Robert Frost",
+  "We don't stop playing because we grow old; we grow old because we stop playing. - George Bernard Shaw",
+  "It is better to have loved and lost than just to have lost.",
+  "It is bad luck to be superstitious.",
+  "There are few things in life not made better by copious amounts of melted cheese and sour cream. - Chris Toews",
+  "If it jams, force it. If it breaks, it needed replacement anyway.",
+  "Always remember that you are unique. Just like everyone else.",
+  "A bachelor is a guy who is footloose and fiancee free.",
+  "If Yoda a great Jedi master he is, why not a good sentence construct can he?",
+  "People will remember you better if you always wear the same outfit.",
+  "All things are possible except for skiing through a revolving door.",
+  "Only two of my personalities are schizophrenic, but one of them is paranoid and the other one is out to get him.",
+  "If you love a thing of beauty, set it free. If it doesn't come back to you, hunt it down and kill it.",
+  "I may be schizophrenic, but at least I'll always have each other.",
+  "Give your child mental blocks for Christmas.",
+  "I stayed up all night playing poker with tarot cards. I got a full house and four people died.",
+  "It is impossible to make anything foolproof because fools are so ingenious.",
+  "Those who can't write, write manuals.",
+  "The brain is a wonderful organ:  it starts working the moment you get up in the morning, and does not stop until you get to school.",
+  "You'd be paranoid too if everybody hated you.",
+  "All generalities are false.",
+  "I'd give my right arm to be ambidextrous.",
+  "Duct tape is like the Force.  It has a light side, and a dark side, and it holds the universe together.",
+  "I used to think I was indecisive, but now I'm not so sure.",
+  "Cole's Law:  Thinly sliced cabbage.",
+  "Things are more like they used to be than they are now.",
+  "There is so much sand in Northern Africa that if it were spread out it would completely cover the Sahara Desert.",
+  "It has been said that we only use 15% of our brain.  I wonder what we do with the other 75%?",
+  "If you want your spouse to listen and pay strict attention to every word you say, talk in your sleep.",
+  "If you have a difficult task, give it to someone lazy ... that person will find an easier way to do it.",
+  "You know it's going to be a bad day when your car horn goes off accidentally and remains stuck as you follow a group of Hell's Angels on the freeway.",
+  "The way to make a small fortune in the commodities market is to start with a large fortune.",
+  "A closed mouth gathers no feet.",
+  "A journey of a thousand miles begins with a cash advance.",
+  "A king's castle is his home.",
+  "A penny saved is ridiculous.",
+  "All that glitters has a high refractive index.",
+  "Ambition a poor excuse for not having enough sense to be lazy.",
+  "Anarchy is better that no government at all.",
+  "Any small object when dropped will hide under a larger object.",
+  "Automobile - A mechanical device that runs up hills and down people.",
+  "Be moderate where pleasure is concerned, avoid fatigue.",
+  "Brain -- the apparatus with which we think that we think.",
+  "BATCH - A group, kinda like a herd.",
+  "omputer modelers simulate it first.",
+  "Computer programmers don't byte, they nybble a bit.",
+  "Computer programmers know how to use their hardware.",
+  "Computers are not intelligent.  They only think they are.",
+  "Courage is your greatest present need.",
+  "Death is life's way of telling you you've been fired.",
+  "Death is Nature's way of saying 'slow down'.",
+  "Do something unusual today.  Accomplish work on the computer.",
+  "Don't force it, get a larger hammer.",
+  "Don't hate yourself in the morning -- sleep till noon.",
+  "Drive defensively -- buy a tank.",
+  "Earn cash in your spare time -- blackmail friends.",
+  "Entropy isn't what it used to be.",
+  "Fairy tales: horror stories for children to get them use to reality.",
+  "Familiarity breeds children.",
+  "God didn't create the world in 7 days.  He pulled an all-nighter on the 6th.",
+  "Going the speed of light is bad for your age.",
+  "He who hesitates is sometimes saved.",
+  "Health is merely the slowest possible rate at which one can die.",
+  "Help support helpless victims of computer error.",
+  "Herblock's Law: if it is good, they will stop making it.",
+  "History does not repeat itself, -- historians merely repeat each other.",
+  "If you don't change your direction, you may end up where you were headed.",
+  "If you're not part of the solution, be part of the problem!",
+  "In the field of observation, chance favors only the prepared minds.",
+  "It is a miracle that curiosity survives formal education.  Albert Einstein",
+  "It works better if you plug it in.",
+  "It's not hard to meet expenses, they're everywhere.",
+  "Jury -- Twelve people who determine which client has the better lawyer.",
+  "KODACLONE - duplicating film.",
+  "Let not the sands of time get in your lunch.",
+  "Life is what happens to you while you are planning to do something else.",
+  "Lynch's Law: When the going gets tough, everyone leaves.",
+  "Mediocrity thrives on standardization.",
+  "MOP AND GLOW - Floor wax used by Three Mile Island cleanup team.",
+  "Never lick a gift horse in the mouth.",
+  "Old MacDonald had an agricultural real estate tax abatement.",
+  "Quoting one is plagiarism.  Quoting many is research.",
+  "Reality's the only obstacle to happiness.",
+  "Screw up your life, you've screwed everything else up.",
+  "Silver's law:   If Murphy's law can go wrong it will.",
+  "Some grow with responsibility, others just swell.",
+  "The attention span of a computer is as long as its electrical cord.",
+  "The only difference between a rut and a grave is the depth.",
+  "The road to to success is always under construction.",
+  "Those who can't write, write help files.",
+  "To be, or not to be, those are the parameters.",
+  "To err is human, to really foul things up requires a computer.",
+  "Today is the last day of your life so far.",
+  "TRAPEZOID - A device for catching zoids.",
+  "Wasting time is an important part of life.",
+  "When all else fails, read the instructions.",
+  "When in doubt, don't bother.",
+  "When in doubt, ignore it.",
+};
 
 
 BLEPeripheral                   blePeripheral           = BLEPeripheral();
@@ -341,13 +482,13 @@ void sendBLEcmd(String Command) {
 }
 
 boolean ignoreMsg(String msgText) {
-  char msgArray[msgText.length()];
-  msgText.toCharArray(msgArray, msgText.length());
+  char textArray[msgText.length()];
+  msgText.toCharArray(textArray, msgText.length());
   //msgTextToIgnore
   int msgCount = sizeof(msgTextToIgnore) / sizeof(msgTextToIgnore[0]);
   for (int i = 0; i < msgCount; i++) {
     //char eachIgnoreable = msgTextToIgnore[i];
-    if (strstr (msgArray, msgTextToIgnore[i])) {
+    if (strstr (textArray, msgTextToIgnore[i])) {
       return true;
     }
   }
@@ -739,7 +880,7 @@ void displayMenu3() {
     if (msg[0] == 0 ) {
       //we are just starting, so get the msg"
       doneScrolling = false;
-      getRandomQuote(); //loads quote into msg
+      getRandomQuote(msg); //loads quote into msg
       currentCharStep = -30;// make it start out a little to make it easier to read
       currentCharInt = 0;
       //strcpy(msg, tempMsg);
@@ -781,7 +922,7 @@ void displayMenu3() {
       doneScrolling = true;
       msg[0] = 0;
     }
-    display.setCursor((currentCharStep * -1), 10);
+    display.setCursor((currentCharStep * -1), 12);
     display.setTextSize(2);
     display.print(thisLine);
     display.display();
@@ -1048,306 +1189,19 @@ void displayMenu5() {
   display.display();
 }
 
-char * getRandomQuote() {
 
-  quoteIndex++;
-  //char thisMsg[154];
-  //strcpy(msg, msgPrefix);
-  //msg
-  switch (quoteIndex) {
-    case 0:
-      strncpy( msg, "It is better to have loved and lost than just to have lost.", sizeof(msg) );
-      break;
-    case 1:
-      strncpy( msg, "It is bad luck to be superstitious.", sizeof(msg) );
-      break;
-    case 2:
-      strncpy( msg, "If it jams, force it. If it breaks, it needed replacement anyway.", sizeof(msg) );
-      break;
-    case 3:
-      strncpy( msg, "Always remember that you are unique. Just like everyone else.", sizeof(msg) );
-      break;
-    case 4:
-      strncpy( msg, "A bachelor is a guy who is footloose and fiancee free.", sizeof(msg) );
-      break;
-    case 5:
-      strncpy( msg, "If Yoda a great Jedi master he is, why not a good sentence construct can he?", sizeof(msg) );
-      break;
-    case 6:
-      strncpy( msg, "People will remember you better if you always wear the same outfit.", sizeof(msg) );
-      break;
-    case 7:
-      strncpy( msg, "All things are possible except for skiing through a revolving door.", sizeof(msg) );
-      break;
-    case 8:
-      strncpy( msg, "Only two of my personalities are schizophrenic, but one of them is paranoid and the other one is out to get him.", sizeof(msg) );
-      break;
-    case 9:
-      strncpy( msg, "If you love a thing of beauty, set it free. If it doesn't come back to you, hunt it down and kill it.", sizeof(msg) );
-      break;
-    case 10:
-      strncpy( msg, "I may be schizophrenic, but at least I'll always have each other.", sizeof(msg) );
-      break;
-    case 11:
-      strncpy( msg, "Give your child mental blocks for Christmas.", sizeof(msg) );
-      break;
-    case 12:
-      strncpy( msg, "I stayed up all night playing poker with tarot cards. I got a full house and four people died.", sizeof(msg) );
-      break;
-    case 13:
-      strncpy( msg, "It is impossible to make anything foolproof because fools are so ingenious.", sizeof(msg) );
-      break;
-    case 14:
-      strncpy( msg, "Those who can't write, write manuals.", sizeof(msg) );
-      break;
-    case 15:
-      strncpy( msg, "The brain is a wonderful organ:  it starts working the moment you get up in the morning, and does not stop until you get to school.", sizeof(msg) );
-      break;
-    case 16:
-      strncpy( msg, "You'd be paranoid too if everybody hated you.", sizeof(msg) );
-      break;
-    case 17:
-      strncpy( msg, "All generalities are false.", sizeof(msg) );
-      break;
-    case 18:
-      strncpy( msg, "I'd give my right arm to be ambidextrous.", sizeof(msg) );
-      break;
-    case 19:
-      strncpy( msg, "Duct tape is like the Force.  It has a light side, and a dark side, and it holds the universe together.", sizeof(msg) );
-      break;
-    case 20:
-      strncpy( msg, "I used to think I was indecisive, but now I'm not so sure.", sizeof(msg) );
-      break;
-    case 21:
-      strncpy( msg, "Cole's Law:  Thinly sliced cabbage.", sizeof(msg) );
-      break;
-    case 22:
-      strncpy( msg, "Things are more like they used to be than they are now.", sizeof(msg) );
-      break;
-    case 23:
-      strncpy( msg, "There is so much sand in Northern Africa that if it were spread out it would completely cover the Sahara Desert.", sizeof(msg) );
-      break;
-    case 24:
-      strncpy( msg, "It has been said that we only use 15% of our brain.  I wonder what we do with the other 75%?", sizeof(msg) );
-      break;
-    case 25:
-      strncpy( msg, "If you want your spouse to listen and pay strict attention to every word you say, talk in your sleep.", sizeof(msg) );
-      break;
-    case 26:
-      strncpy( msg, "If you have a difficult task, give it to someone lazy ... that person will find an easier way to do it.", sizeof(msg) );
-      break;
-    case 27:
-      strncpy( msg, "You know it's going to be a bad day when your car horn goes off accidentally and remains stuck as you follow a group of Hell's Angels on the freeway.", sizeof(msg) );
-      break;
-    case 28:
-      strncpy( msg, "The way to make a small fortune in the commodities market is to start with a large fortune.", sizeof(msg) );
-      break;
-    case 29:
-      strncpy( msg, "A closed mouth gathers no feet.", sizeof(msg) );
-      break;
-    case 30:
-      strncpy( msg, "A journey of a thousand miles begins with a cash advance.", sizeof(msg) );
-      break;
-    case 31:
-      strncpy( msg, "A king's castle is his home.", sizeof(msg) );
-      break;
-    case 32:
-      strncpy( msg, "A penny saved is ridiculous.", sizeof(msg) );
-      break;
-    case 33:
-      strncpy( msg, "All that glitters has a high refractive index.", sizeof(msg) );
-      break;
-    case 34:
-      strncpy( msg, "Ambition a poor excuse for not having enough sense to be lazy.", sizeof(msg) );
-      break;
-    case 35:
-      strncpy( msg, "Anarchy is better that no government at all.", sizeof(msg) );
-      break;
-    case 36:
-      strncpy( msg, "Any small object when dropped will hide under a larger object.", sizeof(msg) );
-      break;
-    case 37:
-      strncpy( msg, "Automobile - A mechanical device that runs up hills and down people.", sizeof(msg) );
-      break;
-    case 38:
-      strncpy( msg, "Be moderate where pleasure is concerned, avoid fatigue.", sizeof(msg) );
-      break;
-    case 39:
-      strncpy( msg, "Brain -- the apparatus with which we think that we think.", sizeof(msg) );
-      break;
-    case 40:
-      strncpy( msg, "BATCH - A group, kinda like a herd.", sizeof(msg) );
-      break;
-    case 41:
-      strncpy( msg, "omputer modelers simulate it first.", sizeof(msg) );
-      break;
-    case 42:
-      strncpy( msg, "Computer programmers don't byte, they nybble a bit.", sizeof(msg) );
-      break;
-    case 43:
-      strncpy( msg, "Computer programmers know how to use their hardware.", sizeof(msg) );
-      break;
-    case 44:
-      strncpy( msg, "Computers are not intelligent.  They only think they are.", sizeof(msg) );
-      break;
-    case 45:
-      strncpy( msg, "Courage is your greatest present need.", sizeof(msg) );
-      break;
-    case 46:
-      strncpy( msg, "Death is life's way of telling you you've been fired.", sizeof(msg) );
-      break;
-    case 47:
-      strncpy( msg, "Death is Nature's way of saying 'slow down'.", sizeof(msg) );
-      break;
-    case 48:
-      strncpy( msg, "Do something unusual today.  Accomplish work on the computer.", sizeof(msg) );
-      break;
-    case 49:
-      strncpy( msg, "Don't force it, get a larger hammer.", sizeof(msg) );
-      break;
-    case 50:
-      strncpy( msg, "Don't hate yourself in the morning -- sleep till noon.", sizeof(msg) );
-      break;
-    case 51:
-      strncpy( msg, "Drive defensively -- buy a tank.", sizeof(msg) );
-      break;
-    case 52:
-      strncpy( msg, "Earn cash in your spare time -- blackmail friends.", sizeof(msg) );
-      break;
-    case 53:
-      strncpy( msg, "Entropy isn't what it used to be.", sizeof(msg) );
-      break;
-    case 54:
-      strncpy( msg, "Fairy tales: horror stories for children to get them use to reality.", sizeof(msg) );
-      break;
-    case 55:
-      strncpy( msg, "Familiarity breeds children.", sizeof(msg) );
-      break;
-    case 56:
-      strncpy( msg, "God didn't create the world in 7 days.  He pulled an all-nighter on the 6th.", sizeof(msg) );
-      break;
-    case 57:
-      strncpy( msg, "Going the speed of light is bad for your age.", sizeof(msg) );
-      break;
-    case 58:
-      strncpy( msg, "He who hesitates is sometimes saved.", sizeof(msg) );
-      break;
-    case 59:
-      strncpy( msg, "Health is merely the slowest possible rate at which one can die.", sizeof(msg) );
-      break;
-    case 60:
-      strncpy( msg, "Help support helpless victims of computer error.", sizeof(msg) );
-      break;
-    case 61:
-      strncpy( msg, "Herblock's Law: if it is good, they will stop making it.", sizeof(msg) );
-      break;
-    case 62:
-      strncpy( msg, "History does not repeat itself, -- historians merely repeat each other.", sizeof(msg) );
-      break;
-    case 63:
-      strncpy( msg, "If you don't change your direction, you may end up where you were headed.", sizeof(msg) );
-      break;
-    case 64:
-      strncpy( msg, "If you're not part of the solution, be part of the problem!", sizeof(msg) );
-      break;
-    case 65:
-      strncpy( msg, "In the field of observation, chance favors only the prepared minds.", sizeof(msg) );
-      break;
-    case 66:
-      strncpy( msg, "It is a miracle that curiosity survives formal education.  Albert Einstein", sizeof(msg) );
-      break;
-    case 67:
-      strncpy( msg, "It works better if you plug it in.", sizeof(msg) );
-      break;
-    case 68:
-      strncpy( msg, "It's not hard to meet expenses, they're everywhere.", sizeof(msg) );
-      break;
-    case 69:
-      strncpy( msg, "Jury -- Twelve people who determine which client has the better lawyer.", sizeof(msg) );
-      break;
-    case 70:
-      strncpy( msg, "KODACLONE - duplicating film.", sizeof(msg) );
-      break;
-    case 71:
-      strncpy( msg, "Let not the sands of time get in your lunch.", sizeof(msg) );
-      break;
-    case 72:
-      strncpy( msg, "Life is what happens to you while you are planning to do something else.", sizeof(msg) );
-      break;
-    case 73:
-      strncpy( msg, "Lynch's Law: When the going gets tough, everyone leaves.", sizeof(msg) );
-      break;
-    case 74:
-      strncpy( msg, "Mediocrity thrives on standardization.", sizeof(msg) );
-      break;
-    case 75:
-      strncpy( msg, "MOP AND GLOW - Floor wax used by Three Mile Island cleanup team.", sizeof(msg) );
-      break;
-    case 76:
-      strncpy( msg, "Never lick a gift horse in the mouth.", sizeof(msg) );
-      break;
-    case 77:
-      strncpy( msg, "Old MacDonald had an agricultural real estate tax abatement.", sizeof(msg) );
-      break;
-    case 78:
-      strncpy( msg, "Quoting one is plagiarism.  Quoting many is research.", sizeof(msg) );
-      break;
-    case 79:
-      strncpy( msg, "Reality's the only obstacle to happiness.", sizeof(msg) );
-      break;
-    case 80:
-      strncpy( msg, "Screw up your life, you've screwed everything else up.", sizeof(msg) );
-      break;
-    case 81:
-      strncpy( msg, "Silver's law:   If Murphy's law can go wrong it will.", sizeof(msg) );
-      break;
-    case 82:
-      strncpy( msg, "Some grow with responsibility, others just swell.", sizeof(msg) );
-      break;
-    case 83:
-      strncpy( msg, "The attention span of a computer is as long as its electrical cord.", sizeof(msg) );
-      break;
-    case 84:
-      strncpy( msg, "The only difference between a rut and a grave is the depth.", sizeof(msg) );
-      break;
-    case 85:
-      strncpy( msg, "The road to to success is always under construction.", sizeof(msg) );
-      break;
-    case 86:
-      strncpy( msg, "Those who can't write, write help files.", sizeof(msg) );
-      break;
-    case 87:
-      strncpy( msg, "To be, or not to be, those are the parameters.", sizeof(msg) );
-      break;
-    case 88:
-      strncpy( msg, "To err is human, to really foul things up requires a computer.", sizeof(msg) );
-      break;
-    case 89:
-      strncpy( msg, "Today is the last day of your life so far.", sizeof(msg) );
-      break;
-    case 90:
-      strncpy( msg, "TRAPEZOID - A device for catching zoids.", sizeof(msg) );
-      break;
-    case 91:
-      strncpy( msg, "Wasting time is an important part of life.", sizeof(msg) );
-      break;
-    case 92:
-      strncpy( msg, "When all else fails, read the instructions.", sizeof(msg) );
-      break;
-    case 93:
-      strncpy( msg, "When in doubt, don't bother.", sizeof(msg) );
-      break;
-    case 94:
-      strncpy( msg, "When in doubt, ignore it.", sizeof(msg) );
-      quoteIndex = -1;
-      break;
+void  getRandomQuote(char* currentMsgHolder) {
+
+
+  //get size of message pool
+  int totalMsgCount = sizeof(msgArray) / sizeof(msgArray[0]);
+
+  randomSeed(analogRead(millis()));
+  quoteIndex = random(0, totalMsgCount);
+
+  for (int i = 0; i < msgLenth; ++i) {
+    currentMsgHolder[i] = msgArray[quoteIndex][i];
   }
-
-
-  msg[sizeof(msg) - 1] = 0;
-  return msg;
-
-
 
 }
 
