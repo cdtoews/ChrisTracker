@@ -24,7 +24,7 @@
 Adafruit_SSD1306 display(128, 32, &SPI, 28, 4, 29);
 
 boolean debug = false;
-#define  CTversion "0.5 dev0"
+#define  CTversion "0.5 dev1"
 
 #define sleepDelay 10000
 #define clockDelay 5000
@@ -65,10 +65,11 @@ const int quoteSize = 95;
 String bleSymbol = " ";
 int contrast;
 
-const char msgTextToIgnore[2][30] =
+const char msgTextToIgnore[3][30] =
 {
   "Voice is doing work",
-  "1234567890x"
+  "1234567890x",
+  "mail is sync"
 };
 
 const char msgArray[][msgLenth] =
