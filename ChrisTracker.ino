@@ -24,25 +24,27 @@
 Adafruit_SSD1306 display(128, 32, &SPI, 28, 4, 29);
 
 boolean debug = false;
-#define  CTversion "0.5 dev1"
+#define  CTversion "CT 0.5 dev17"
 
 #define sleepDelay 10000
 #define clockDelay 5000
+#define batteryRefreshDelay 5000
 #define BUTTON_PIN              30
 #define refreshRate 100
 #define msgLenth 200
 
+int lastBatteryLevel = 0;
 int menu = 0;
 int lastMenu = 0;
 volatile bool buttonPressed = false;
 long startbutton;
-unsigned long sleepTime, displayRefreshTime;
+unsigned long sleepTime, displayRefreshTime, batteryRefreshTime;
 volatile bool sleeping = false;
 int timezone;
 int steps;
 int steps1;
 String serialNr = "235246472";
-String versionNr = "110.200.051";
+String versionNr = CTversion; //"110.200.051";
 String btversionNr = "100.016.051";
 String msgText;
 boolean gotoBootloader = false;
@@ -65,12 +67,25 @@ const int quoteSize = 95;
 String bleSymbol = " ";
 int contrast;
 
-const char msgTextToIgnore[3][30] =
+const char msgTextToIgnore[][30] =
 {
   "Voice is doing work",
   "1234567890x",
-  "mail is sync"
+  "mail is sync",
+  "Determining how to route",
+  "how to route your",
 };
+
+int menuIndex = 0;
+int menuArray[10];
+#define menu0  true //time & battery
+#define menu2  true //last push msg
+#define menu3  false //motm
+#define menu4  true //bootloader
+#define menu5  true //game
+#define menu7  true //vertical time
+#define endOfMenuArray -42
+
 
 const char msgArray[][msgLenth] =
 {
@@ -81,136 +96,7 @@ const char msgArray[][msgLenth] =
   "The best thing about the future is that it comes one day at a time.- Abraham Lincoln",
   "The only mystery in life is why the kamikaze pilots wore helmets.- Al McGuire",
   "Light travels faster than sound. This is why some people appear bright until you hear them speak.- Alan Dundes",
-  "Nobody realizes that some people expend tremendous energy merely to be normal.- Albert Camus",
-  "Reality continues to ruin my life. - Bill Watterson",
-  "I'm addicted to placebos. - Steven Wright",
-  "I'd like to live like a poor man - only with lots of money. - Pablo Picasso",
-  "Men marry women with the hope they will never change. Women marry men with the hope they will change. Invariably they are both disappointed.- Albert Einstein",
-  "The difference between stupidity and genius is that genius has its limits. - Albert Einstein",
-  "All the things I really like to do are either immoral, illegal or fattening.- Alexander Woollcott",
-  "Going to church doesn't make you a Christian any more than standing in a garage makes you a car. BILLY SUNDAY",
-  "Never go to bed mad. Stay up and fight. - Phyllis Diller",
-  "Never miss a good chance to shut up. - Will Rogers",
-  "The only thing that interferes with my learning is my education. - Albert Einstein",
-  "I'm not as think as you drunk I am. - Anonymous",
-  "I am nobody. Nobody is perfect. I am perfect.",
-  "They say marriages are made in Heaven. But so is thunder and lightning. - Clint Eastwood",
-  "Change is not a four-letter word… but often your reaction to it is! - Jeffrey Gitomer",
-  "I always wanted to be somebody, but now I realize I should have been more specific. - Lily Tomlin",
-  "Sane is boring. - R.A. Salvatore",
-  "Stressed is just desserts spelled backwards.",
-  "Fart when people hug you. You’ll make them feel strong.",
-  "It is a truth universally acknowledged that your urge to pee intensifies as you are unlocking the door.",
-  "Don't worry if plan A fails, there are 25 more letters in the alphabet.",
-  "A bank is a place that will lend you money, if you can prove that you don’t need it.",
-  "Doesn't expecting the unexpected make the unexpected expected?",
-  "I'm jealous of my parents, I'll never have a kid as cool as them.",
-  "When life gives you melons, you might be dyslexic.",
-  "5/4 of people admit that they’re bad with fractions.",
-  "Why do you never see elephants hiding in trees? Because they're so good at it.",
-  "Did you hear about the restaurant on the moon? Great food, no atmosphere.",
-  "Two goldfish are in a tank. One says to the other, 'do you know how to drive this thing?'",
-  "There are people who are a living proof that total brain failure does not always lead to physical death.",
-  "If a book about failures doesn't sell, is it a success? - Jerry Seinfeld",
-  "You tried your best and you failed miserably. The lesson is, never try. - Homer Simpson",
-  "The brain is a wonderful organ; it starts working the moment you get up in the morning, and does not stop until you get into the office. - Robert Frost",
-  "We don't stop playing because we grow old; we grow old because we stop playing. - George Bernard Shaw",
-  "It is better to have loved and lost than just to have lost.",
-  "It is bad luck to be superstitious.",
-  "There are few things in life not made better by copious amounts of melted cheese and sour cream. - Chris Toews",
-  "If it jams, force it. If it breaks, it needed replacement anyway.",
-  "Always remember that you are unique. Just like everyone else.",
-  "A bachelor is a guy who is footloose and fiancee free.",
-  "If Yoda a great Jedi master he is, why not a good sentence construct can he?",
-  "People will remember you better if you always wear the same outfit.",
-  "All things are possible except for skiing through a revolving door.",
-  "Only two of my personalities are schizophrenic, but one of them is paranoid and the other one is out to get him.",
-  "If you love a thing of beauty, set it free. If it doesn't come back to you, hunt it down and kill it.",
-  "I may be schizophrenic, but at least I'll always have each other.",
-  "Give your child mental blocks for Christmas.",
-  "I stayed up all night playing poker with tarot cards. I got a full house and four people died.",
-  "It is impossible to make anything foolproof because fools are so ingenious.",
-  "Those who can't write, write manuals.",
-  "The brain is a wonderful organ:  it starts working the moment you get up in the morning, and does not stop until you get to school.",
-  "You'd be paranoid too if everybody hated you.",
-  "All generalities are false.",
-  "I'd give my right arm to be ambidextrous.",
-  "Duct tape is like the Force.  It has a light side, and a dark side, and it holds the universe together.",
-  "I used to think I was indecisive, but now I'm not so sure.",
-  "Cole's Law:  Thinly sliced cabbage.",
-  "Things are more like they used to be than they are now.",
-  "There is so much sand in Northern Africa that if it were spread out it would completely cover the Sahara Desert.",
-  "It has been said that we only use 15% of our brain.  I wonder what we do with the other 75%?",
-  "If you want your spouse to listen and pay strict attention to every word you say, talk in your sleep.",
-  "If you have a difficult task, give it to someone lazy ... that person will find an easier way to do it.",
-  "You know it's going to be a bad day when your car horn goes off accidentally and remains stuck as you follow a group of Hell's Angels on the freeway.",
-  "The way to make a small fortune in the commodities market is to start with a large fortune.",
-  "A closed mouth gathers no feet.",
-  "A journey of a thousand miles begins with a cash advance.",
-  "A king's castle is his home.",
-  "A penny saved is ridiculous.",
-  "All that glitters has a high refractive index.",
-  "Ambition a poor excuse for not having enough sense to be lazy.",
-  "Anarchy is better that no government at all.",
-  "Any small object when dropped will hide under a larger object.",
-  "Automobile - A mechanical device that runs up hills and down people.",
-  "Be moderate where pleasure is concerned, avoid fatigue.",
-  "Brain -- the apparatus with which we think that we think.",
-  "BATCH - A group, kinda like a herd.",
-  "omputer modelers simulate it first.",
-  "Computer programmers don't byte, they nybble a bit.",
-  "Computer programmers know how to use their hardware.",
-  "Computers are not intelligent.  They only think they are.",
-  "Courage is your greatest present need.",
-  "Death is life's way of telling you you've been fired.",
-  "Death is Nature's way of saying 'slow down'.",
-  "Do something unusual today.  Accomplish work on the computer.",
-  "Don't force it, get a larger hammer.",
-  "Don't hate yourself in the morning -- sleep till noon.",
-  "Drive defensively -- buy a tank.",
-  "Earn cash in your spare time -- blackmail friends.",
-  "Entropy isn't what it used to be.",
-  "Fairy tales: horror stories for children to get them use to reality.",
-  "Familiarity breeds children.",
-  "God didn't create the world in 7 days.  He pulled an all-nighter on the 6th.",
-  "Going the speed of light is bad for your age.",
-  "He who hesitates is sometimes saved.",
-  "Health is merely the slowest possible rate at which one can die.",
-  "Help support helpless victims of computer error.",
-  "Herblock's Law: if it is good, they will stop making it.",
-  "History does not repeat itself, -- historians merely repeat each other.",
-  "If you don't change your direction, you may end up where you were headed.",
-  "If you're not part of the solution, be part of the problem!",
-  "In the field of observation, chance favors only the prepared minds.",
-  "It is a miracle that curiosity survives formal education.  Albert Einstein",
-  "It works better if you plug it in.",
-  "It's not hard to meet expenses, they're everywhere.",
-  "Jury -- Twelve people who determine which client has the better lawyer.",
-  "KODACLONE - duplicating film.",
-  "Let not the sands of time get in your lunch.",
-  "Life is what happens to you while you are planning to do something else.",
-  "Lynch's Law: When the going gets tough, everyone leaves.",
-  "Mediocrity thrives on standardization.",
-  "MOP AND GLOW - Floor wax used by Three Mile Island cleanup team.",
-  "Never lick a gift horse in the mouth.",
-  "Old MacDonald had an agricultural real estate tax abatement.",
-  "Quoting one is plagiarism.  Quoting many is research.",
-  "Reality's the only obstacle to happiness.",
-  "Screw up your life, you've screwed everything else up.",
-  "Silver's law:   If Murphy's law can go wrong it will.",
-  "Some grow with responsibility, others just swell.",
-  "The attention span of a computer is as long as its electrical cord.",
-  "The only difference between a rut and a grave is the depth.",
-  "The road to to success is always under construction.",
-  "Those who can't write, write help files.",
-  "To be, or not to be, those are the parameters.",
-  "To err is human, to really foul things up requires a computer.",
-  "Today is the last day of your life so far.",
-  "TRAPEZOID - A device for catching zoids.",
-  "Wasting time is an important part of life.",
-  "When all else fails, read the instructions.",
-  "When in doubt, don't bother.",
-  "When in doubt, ignore it.",
+  "Nobody realizes that some people expend tremendous energy merely to be normal.- Albert Camus"
 };
 
 
@@ -228,6 +114,7 @@ BLECharacteristic   RXchar1        = BLECharacteristic("0003", BLEWriteWithoutRe
 #define HEIGHT       32 // Display height in pixels
 #define MAX_FPS      150 // Maximum redraw rate, frames/second
 int totalScore = 0;
+int hiScore = 0;
 
 
 // The 'sand' grains exist in an integer coordinate space that's 256X
@@ -320,7 +207,6 @@ void buttonHandler() {
   if (!sleeping) buttonPressed = true;
   //let's try just going back to the last option
   //else menu = 0;
-  menu = lastMenu; //lastMenu remembers the last menu item user selected
   powerUp();
 }
 
@@ -532,12 +418,32 @@ void handlePush(String pushMSG) {
 }
 
 int getBatteryLevel() {
-  return map(analogRead(3), 500, 715, 0, 100);
+  //let's only get battery level every xx seconds, so that way it doesn't flicker
+  if (millis() - batteryRefreshTime > batteryRefreshDelay) {
+    batteryRefreshTime = millis();
+    lastBatteryLevel = map(analogRead(3), 500, 715, 0, 100);
+  }
+
+  //return map(analogRead(3), 500, 715, 0, 100);
+  return lastBatteryLevel;
 }
 
 void setup() {
   randomSeed(analogRead(3));
   quoteIndex = random(0, 90);
+
+  //initialize menuArray
+  int counter = 0;
+  if (menu0)menuArray[counter++] = 0;
+  if (menu2)menuArray[counter++] = 2;
+  if (menu3)menuArray[counter++] = 3;
+  if (menu4)menuArray[counter++] = 4;
+  if (menu5)menuArray[counter++] = 5;
+  if (menu7)menuArray[counter++] = 7;
+  menuArray[counter] = endOfMenuArray;
+
+  //get initial battery level
+  lastBatteryLevel = map(analogRead(3), 500, 715, 0, 100);
 
   pinMode(BUTTON_PIN, INPUT);
   pinMode(3, INPUT);
@@ -676,29 +582,27 @@ void loop() {
         break;
     }
     if (buttonPressed) {
+      //let's check if we are currently vibrating, and if so stahp it
+      if (vibrationMode) {
+        vibrationMode = false;
+        digitalWrite(25, vibrationMode);
+      }
       buttonPressed = false;
       switch (menu) {
-        case -1:
-          menu = 0;
-          lastMenu = 0;
-          break;
         case 0:
-          menu = 2;
-          lastMenu = 2;
+          setNextmenu();
           break;
         //        case 1:
         //          menu = 2;
         //          break;
         case 2:
-          menu = 3;
-          lastMenu = 3;
+          setNextmenu();
           break;
         case 3:
           //reset msg;
           msg[0] = 0;
           doneScrolling = true;
-          menu = 4;
-          lastMenu = 4;
+          setNextmenu();
           break;
         case 4:
           startbutton = millis();
@@ -709,18 +613,15 @@ void loop() {
             sd_nvic_SystemReset();
             while (1) {};
           } else {
-            menu = 5;
-            lastMenu = 5;
+            setNextmenu();
           }
           break;
         case 5:
           totalScore = 0;
-          menu = 7;
-          lastMenu = 7;
+          setNextmenu();
           break;
         case 7:
-          menu = 0;
-          lastMenu = 0;
+          setNextmenu();
           break;
         case 77:
           menu = lastMenu;
@@ -752,15 +653,26 @@ void loop() {
         break;
       case 5:
         if (millis() - sleepTime > 20000 ) {
-          //let's quickly display the score
           display.clearDisplay();
           display.setTextSize(2);
+
+          //let's see if we have a new hi score
+          if (totalScore > hiScore) {
+            hiScore = totalScore;
+            display.setCursor(0, 18);
+            display.print("Hi Score");
+          }
+          //let's quickly display the score
+
           display.setCursor(0, 0);
           display.print(totalScore);
           totalScore = 0;
           display.display();
           display.setTextSize(1);
-          delay(2000);
+          digitalWrite(25, true);
+          delay(1000);
+          digitalWrite(25, false);
+          delay(1000);
           powerDown();
         }
         break;
@@ -782,6 +694,16 @@ void loop() {
     }
   }
 }
+
+void setNextmenu() {
+  lastMenu = menuArray[menuIndex++];
+  if (menuArray[menuIndex] == endOfMenuArray) {
+    menuIndex = 0;
+  }
+  menu = menuArray[menuIndex];
+}
+
+
 
 //display time & Battery
 void displayMenu0() {
@@ -816,37 +738,10 @@ void displayMenu0() {
   display.display();
 }
 
-//void displayMenu1() {
-//  display.setRotation(0);
-//  display.clearDisplay();
-//  display.setCursor(0, 0);
-//  display.println("Manual Mac:");
-//  char tmp[16];
-//  sprintf(tmp, "%04X", NRF_FICR->DEVICEADDR[1] & 0xffff);
-//  String MyID = tmp;
-//  sprintf(tmp, "%08X", NRF_FICR->DEVICEADDR[0]);
-//  MyID += tmp;
-//  display.println(MyID);
-//  display.display();
-//}
 
 //Display last push msg
 void displayMenu2() {
   display.setRotation(0);
-  //  uint8_t res[6];
-  //  softbeginTransmission(0x1F);
-  //  softwrite(0x06);
-  //  softendTransmission();
-  //  softrequestFrom(0x1F , 6);
-  //  res[0] = softread();
-  //  res[1] = softread();
-  //  res[2] = softread();
-  //  res[3] = softread();
-  //  res[4] = softread();
-  //  res[5] = softread();
-  //  byte x = (int16_t)((res[1] << 8) | res[0]) / 128;
-  //  byte y = (int16_t)((res[3] << 8) | res[2]) / 128;
-  //  byte z = (int16_t)((res[5] << 8) | res[4]) / 128;
 
   display.clearDisplay();
   display.setCursor(0, 0);
@@ -1065,8 +960,8 @@ void displayMenu5() {
   int32_t v2; // Velocity squared
   float   v;  // Absolute velocity
   for (int i = 0; i < N_GRAINS; i++) {
-    grain[i].vx += ax + random(az2); // A little randomness makes
-    grain[i].vy += ay + random(az2); // tall stacks topple better!
+    grain[i].vx += ax ;// + random(az2); // A little randomness makes
+    grain[i].vy += ay ;// + random(az2); // tall stacks topple better!
     v2 = (int32_t)grain[i].vx * grain[i].vx + (int32_t)grain[i].vy * grain[i].vy;
     if (v2 > 65536) { // If v^2 > 65536, then v > 256
       v = sqrt((float)v2); // Velocity vector magnitude
@@ -1187,6 +1082,10 @@ void displayMenu5() {
 
   display.setCursor(0, 0);
   display.print(totalScore);
+  display.setCursor(0, 24);
+  display.print("Hi: ");
+  //display.setCursor(10,24)
+  display.print(hiScore);
   display.display();
 }
 
