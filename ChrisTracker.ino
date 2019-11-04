@@ -24,7 +24,7 @@
 Adafruit_SSD1306 display(128, 32, &SPI, 28, 4, 29);
 
 boolean debug = false;
-#define  CTversion "CT 0.5 dev17"
+#define  CTversion "CT 0.6 dev1"
 
 #define sleepDelay 10000
 #define clockDelay 5000
@@ -205,8 +205,6 @@ void charge() {
 
 void buttonHandler() {
   if (!sleeping) buttonPressed = true;
-  //let's try just going back to the last option
-  //else menu = 0;
   powerUp();
 }
 
@@ -624,14 +622,11 @@ void loop() {
           setNextmenu();
           break;
         case 77:
-          menu = lastMenu;
           break;
         case 88:
-          menu = lastMenu;
           break;
         case 99:
           digitalWrite(25, LOW);
-          menu = lastMenu;
           break;
       }
     }
@@ -680,14 +675,21 @@ void loop() {
         if (millis() - sleepTime > clockDelay ) powerDown();
         break;
       case 77:
-        if (millis() - sleepTime > clockDelay ) powerDown();
+        if (millis() - sleepTime > clockDelay ){
+          powerDown();
+          setNextmenu();
+        }
         break;
       case 88:
-        if (millis() - sleepTime > 3000 ) powerDown();
+        if (millis() - sleepTime > 3000 ){
+          powerDown();
+          setNextmenu();
+        }
         break;
       case 99:
         if (millis() - sleepTime > 6000 ) {
           digitalWrite(25, LOW);
+          setNextmenu();
           powerDown();
         }
         break;
@@ -696,11 +698,15 @@ void loop() {
 }
 
 void setNextmenu() {
-  lastMenu = menuArray[menuIndex++];
+  lastMenu = menuArray[menuIndex];
+  if (menu < 30 && lastMenu < 30) {//only increment menu if normal menu item
+    menuIndex++;
+  }
   if (menuArray[menuIndex] == endOfMenuArray) {
     menuIndex = 0;
   }
   menu = menuArray[menuIndex];
+
 }
 
 
